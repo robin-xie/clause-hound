@@ -17,9 +17,9 @@ class ClauseTemplate implements JsonSerializable
 
     private $clauseclassName = 'dat_clause_language';
 
-    private $docNumber;
+    private $docNumbers = array();
 
-    private $clauses;
+    private $clauses = array();
 
 
     public function __construct($baseUri = null, $clauseclassName = null)
@@ -53,50 +53,67 @@ class ClauseTemplate implements JsonSerializable
     }
 
 
-    public function setDocNumber(string $docNumber)
+    public function getDocNumber(): array
     {
-        $this->docNumber = $docNumber;
-    }
-
-    public function getDocNumber(): string
-    {
-        return $this->docNumber;
+        return $this->docNumbers;
     }
 
 
-    public function fetch(string $docNumber)
+    public function fetch($docNumbers)
     {
 
-        $this->setDocNumber($docNumber);
+        $this->clauses = array();
+        if(!$docNumbers) {
+            return $this;
+        }
 
+        $promises = array();
         $client = new Client(['base_uri' => $this->baseUri, 'timeout'  => 2.0]);
-        $promises = ['response' => $client->postAsync($this->baseUri, ['form_params' => ['docnum' => $this->docNumber]])];
+
+        $this->docNumbers = is_array($docNumbers) ? $docNumbers : (array)$docNumbers;
+        foreach($this->docNumbers as $docNumber) {
+
+            $promises["doc_{$docNumber}"] = $client->postAsync($this->baseUri, ['form_params' => ['docnum' => $docNumber]]);
+        }
+
         $results = Promise\unwrap($promises);
+        foreach($results as $result) {
 
-        $html = $results['response']->getBody();
-        $this->clauses = self::parseDomByClassname($html, $this->clauseclassName);
+            $parsed = self::parseDomByClassname($result->getBody(), $this->clauseclassName);;
+            if($parsed) {
+                $this->clauses[] = $parsed;
+            }
 
+        }
+        return $this->jsonSerialize();
     }
 
 
-    public static function parseDomByClassname(string $html = '', string $className) : ImmArray
+    public static function parseDomByClassname(string $html = '', string $className) : array
     {
+        $data = [];
+
+        if(!$html) {
+            return $data;
+        }
+
         $dom = new DomDocument();
         $dom->loadHTML($html);
 
         $finder = new DomXPath($dom);
         $entries = $finder->query("//*[contains(@class, '{$className}')]");
-        $data = array();
+
         foreach ($entries as $entry) {
             $data[] = $entry->nodeValue;
         }
-        return ImmArray::fromArray($data);
+
+        return $data;
     }
 
 
     public function jsonSerialize() : ImmArray
     {
-        return $this->clauses;
+        return ImmArray::fromArray($this->clauses);
     }
 
 

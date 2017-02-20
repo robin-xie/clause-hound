@@ -13,15 +13,23 @@ try {
 
     $template = new ClauseTemplate();
 
-    //$template->setBaseUri('https://clausehound.com/wp-content/themes/knowhow/actions/load-template.php');
-    //$template->setClauseclassName('dat_clause_language');
 
-    $template->fetch('16170');
-    echo "<pre>". date('Y-m-d H:i:s') .json_encode($template). "</pre>";
+    // $template->setBaseUri('https://clausehound.com/wp-content/themes/knowhow/actions/load-template.php');
+    // $template->setClauseclassName('dat_clause_language');
 
-    $template->fetch('16171');
-    echo "<pre>". date('Y-m-d H:i:s') .json_encode($template). "</pre>";
 
+    echo '<pre>16170 - '. date('Y-m-d H:i:s') . ' - response - '. json_encode($template->fetch('16170')). '</pre>';
+    echo '<pre>16170 - '. date('Y-m-d H:i:s') . ' - response - '. json_encode($template). '</pre>';
+
+
+    echo '<pre>16171 - '. date('Y-m-d H:i:s') . ' - response - '. json_encode($template->fetch('16171')). '</pre>';
+    echo '<pre>16171 - '. date('Y-m-d H:i:s') . ' - response - '. json_encode($template). "</pre>";
+
+
+    echo '<pre>16170 + 16171 -'. date('Y-m-d H:i:s') . ' - response - '. json_encode($template->fetch(['16170','16171'])). '</pre>';
+    echo '<pre>16170 + 16171 -'. date('Y-m-d H:i:s') . ' - response - '. json_encode($template). '</pre>';
+
+    echo 'done';
 }
 catch(Exception $e)
 {
